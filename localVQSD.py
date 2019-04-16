@@ -17,9 +17,9 @@ from VQSD import VQSD, symbol_list_for_product
 # Constants
 # =============================================================================
 
-n = 10
+n = 4
 nreps = 500
-method="COBYLA"
+method = "COBYLA"
 q = 0.5
 maxiter = 1000
 
@@ -51,12 +51,8 @@ if __name__ == "__main__":
     # Get a VQSD instance
     vqsd = VQSD(n)
     
-    #np.random.seed(8675310)
-    
     # Get preparation angles
     sprep_angles = np.random.rand(n)
-    
-    #sprep_angles = [0.75] * n
     
     # Add the state prep circuit and compute the purity
     vqsd.product_state_prep(sprep_angles, cirq.RotXGate)
@@ -76,6 +72,7 @@ if __name__ == "__main__":
 
     # Objective function for PDIP Test
     def objpdip(angs):
+        vqsd.clear_dip_test_circ()
         val = vqsd.obj_pdip_resolved(angs, repetitions=nreps)
         OBJPDIPS.append(val)
         print("PDIP Test obj =", val)
@@ -84,6 +81,7 @@ if __name__ == "__main__":
     # Does the PDIP and also appends the DIP
     def objpdip_compare(angs):
         # Do the PDIP first
+        vqsd.clear_dip_test_circ()
         pval = vqsd.obj_pdip_resolved(angs, repetitions=nreps)
         OBJPDIPS.append(pval)
         print("\nPDIP Test obj =", pval)
@@ -103,9 +101,12 @@ if __name__ == "__main__":
     # Does the weighted sum of costs
     def qcost(angs):
         # PDIP cost
+        vqsd.clear_dip_test_circ()
         pdip = vqsd.obj_pdip_resolved(angs, repetitions=nreps)
         
         # DIP cost
+        vqsd.clear_dip_test_circ()
+        vqsd.dip_test()
         dip = vqsd.obj_dip_resolved(angs, repetitions=nreps)
         
         # weighted sum
@@ -114,6 +115,7 @@ if __name__ == "__main__":
         QOBJS.append(obj)
         print("QCOST OBJ =", obj)
         
+        # DIP Cost with greater shots
         vqsd.clear_dip_test_circ()
         vqsd.dip_test()
         val = vqsd.obj_dip_resolved(angs, repetitions=10000)
@@ -154,19 +156,19 @@ if __name__ == "__main__":
     
     plt.figure(figsize=(6, 7))
     title = "EXACT GLOBAL EVAL {} {} Qubit Product State, {} Shots, {} Iterations, Runtime = {} min.".format(method, n, nreps, maxiter, round(wall, 2))
-    plt.title(title)
+    #plt.title(title)
     
-    plt.plot(process(OBJPDIPS), "-o", linewidth=2, label="Local trained with local")
-    plt.plot(process(OBJDIPS), "-o", linewidth=2, label="Global trained with local")
-    plt.plot(process(OBJGLOBALDIPS), "-o", linewidth=2, label="Global trained with global")
-    plt.plot(process(QOBJS), "-o", linewidth=2, label="q = {}".format(q))
-    plt.plot(process(OBJQDIPS), "-o", linewidth=2, label="Global trained with q = {}".format(q))
+    plt.plot(process(OBJPDIPS), "b-o", linewidth=2, label="$C(q=0.0)$ with $C(q=0.0)$ training")
+    plt.plot(process(OBJGLOBALDIPS), "g-o", linewidth=2, label="$C(q=1.0)$ with $C(q=1.0)$ training")
+    plt.plot(process(QOBJS), "r-o", linewidth=2, label="$C(q=0.5)$ with $C(q=0.5)$ training")
+    plt.plot(process(OBJDIPS), "-o", color="orange", linewidth=2, label="$C(q=1.0)$ with $C(q=0.0)$ training")
+    plt.plot(process(OBJQDIPS), "-o", color="purple", linewidth=2, label="$C(q=1.0)$ with $C(q=0.5)$ training")
     
     plt.grid()
     plt.legend()
     
-    plt.xlabel("Iteration")
-    plt.ylabel("Cost")
+    plt.xlabel("Iteration", fontsize=15, fontweight="bold")
+    plt.ylabel("Cost", fontsize=15, fontweight="bold")
     
     # Save the figure
     t = time.asctime()
