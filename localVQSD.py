@@ -17,7 +17,7 @@ from VQSD import VQSD, symbol_list_for_product
 # Constants
 # =============================================================================
 
-n = 4
+n = 8
 nreps = 500
 method = "COBYLA"
 q = 0.5
@@ -181,7 +181,8 @@ if __name__ == "__main__":
     costs = [process(OBJPDIPS),
              process(OBJDIPS),
              process(OBJGLOBALDIPS),
-             process(QOBJS)]
+             process(QOBJS),
+             process(OBJQDIPS)]
     
     # Pad the lengths
     maxlen = max([len(a) for a in costs])
